@@ -1,0 +1,12 @@
+#!/bin/bash
+
+. "$bootstrap"
+
+echo "$0" "$@"
+
+for var in prog prefix bindir execdir confdir searchdirs PATH; do
+	echo "$var=${!var}"
+done
+
+role testrole
+

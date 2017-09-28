@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# pull in variables and functions
+export bootstrap="${bootstrap-/usr/local/simpleconfig/lib/bootstrap.sh}"
+. "$bootstrap"
+
+# normalize options
+if ! validopts "xh" "xtrace" "help" -- "$@"; then
+	set -- --help
+else
+	set -- "${retval[@]}"
+fi
+unset retval
+
+# parse options
+xtrace=0
+subcommands="${searchfuncs[0]}$(printf "|%s" "${searchfuncs[@]:1}")"
+usage="Syntax: $prog [-xh] [$subcommands] [args]"
+while [[ "$1" == -* ]]; do
+	case "$1" in
+	  -x|--xtrace)  xtrace=1; set -x ;;
+	  -h|--help)    die "$usage" ;;
+	  --)           shift; break ;;
+	esac
+	shift
+done
+
+# parse args
+(( ! $# )) && die "$usage"
+
+# do stuff
+IFS=:
+for dir in $searchdirs; do
+	script="$dir/$1"
+	unset dir
+	if [[ -x "$script" ]]; then
+		[[ -d "$script.d" ]] && export datadir="$script.d"
+		unset IFS
+		exec "$script" "${@:2}"
+	fi
+done
+die "No '%s' in (%s)" "$1" "$searchdirs"
+
